@@ -72,10 +72,24 @@ class BaseGene:
 
         return new_gene
 
-    def crossover(self, gene2):
-        """ Creates a new gene randomly inheriting attributes from its parents."""
+    def crossover(self, gene2, disable_rule='neat-python'):
+        """Create a new gene randomly inheriting attributes from its parents.
+
+        *disable_rule* selects how the NEAT paper's 75% disable rule is applied
+        to the ``enabled`` attribute (connection genes only):
+
+        - ``'neat-python'`` (default): if either parent has the gene disabled,
+          the randomly-inherited enabled value is REPLACED by a fresh
+          Bernoulli(0.25): 75% disabled, 25% enabled.
+        - ``'stanley'``: matches Stanley's reference NEAT C++ implementation.
+          The enabled value is first inherited from a random parent like every
+          other attribute, then if either parent has the gene disabled the
+          inherited value is force-disabled with probability 0.75 (otherwise
+          left alone). Yields ~87.5% disabled when exactly one parent is
+          disabled and 100% disabled when both parents are disabled.
+        """
         assert self.key == gene2.key
-        
+
         # For connection genes, verify innovation numbers match
         # (they should represent the same historical mutation)
         if hasattr(self, 'innovation'):
@@ -91,22 +105,29 @@ class BaseGene:
             new_gene = self.__class__(self.key, innovation=self.innovation)
         else:
             new_gene = self.__class__(self.key)
-        
+
         for a in self._gene_attributes:
             if random() > 0.5:
                 setattr(new_gene, a.name, getattr(self, a.name))
             else:
                 setattr(new_gene, a.name, getattr(gene2, a.name))
-        
+
         # 75% disable rule from NEAT paper (Stanley & Miikkulainen, 2002, p. 111):
         # "There was a 75% chance that an inherited gene was disabled if it was
         # disabled in either parent."
-        # This rule REPLACES the randomly-inherited enabled attribute when either
-        # parent has the gene disabled.
-        if hasattr(new_gene, 'enabled'):
-            if not self.enabled or not gene2.enabled:
+        if hasattr(new_gene, 'enabled') and (not self.enabled or not gene2.enabled):
+            if disable_rule == 'neat-python':
                 # Override whatever was randomly inherited: 75% disabled, 25% enabled.
                 new_gene.enabled = random() >= 0.75
+            elif disable_rule == 'stanley':
+                # Reference C++ behavior: 75% chance to force-disable the
+                # value that was just inherited above; otherwise leave it.
+                if random() < 0.75:
+                    new_gene.enabled = False
+            else:
+                raise ValueError(
+                    f"Unknown disable_rule {disable_rule!r}; "
+                    f"expected 'neat-python' or 'stanley'")
 
         return new_gene
 

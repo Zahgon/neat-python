@@ -17,6 +17,7 @@ class DefaultGenomeConfig:
     allowed_connectivity = ['unconnected', 'fs_neat_nohidden', 'fs_neat', 'fs_neat_hidden',
                             'full_nodirect', 'full', 'full_direct',
                             'partial_nodirect', 'partial', 'partial_direct']
+    allowed_disable_rules = ('neat-python', 'stanley')
 
     def __init__(self, params, section_name='DefaultGenome'):
         # Create full set of available activation functions.
@@ -40,7 +41,8 @@ class DefaultGenomeConfig:
                         ConfigParameter('initial_connection', str, 'unconnected'),
                         ConfigParameter('compatibility_excess_coefficient', str, 'auto'),
                         ConfigParameter('compatibility_include_node_genes', bool, True),
-                        ConfigParameter('compatibility_enable_penalty', float, 1.0)]
+                        ConfigParameter('compatibility_enable_penalty', float, 1.0),
+                        ConfigParameter('disable_rule', str, 'neat-python')]
 
         # Gather configuration data from the gene classes.
         self.node_gene_type = params['node_gene_type']
@@ -115,6 +117,22 @@ class DefaultGenomeConfig:
         else:
             error_string = f"Invalid structural_mutation_surer {self.structural_mutation_surer!r}"
             raise RuntimeError(error_string)
+
+        # Verify disable_rule is valid. Two interpretations of the NEAT paper's
+        # 75% disable rule are supported:
+        #   'neat-python' (default): if either parent has the gene disabled, a
+        #       fresh Bernoulli(0.25) replaces the randomly-inherited enabled
+        #       value -> 75% disabled / 25% enabled regardless of how many
+        #       parents had it disabled.
+        #   'stanley': the original NEAT C++ behavior. After randomly inheriting
+        #       the enabled attribute from a parent, if either parent has the
+        #       gene disabled, force-disable with probability 0.75; otherwise
+        #       keep the inherited value. Yields ~87.5% disabled when exactly
+        #       one parent is disabled and 100% disabled when both are.
+        if self.disable_rule not in self.allowed_disable_rules:
+            raise RuntimeError(
+                f"Invalid disable_rule {self.disable_rule!r}; "
+                f"expected one of {self.allowed_disable_rules}")
 
         self.node_indexer = None
         
@@ -347,7 +365,7 @@ class DefaultGenome:
                         continue
                     self.connections[new_gene.key] = new_gene
                 else:
-                    new_gene = cg1.crossover(cg2)
+                    new_gene = cg1.crossover(cg2, disable_rule=config.disable_rule)
                     # For feed-forward networks, check if this connection would create a cycle
                     if config.feed_forward and creates_cycle(list(self.connections), new_gene.key):
                         continue
@@ -373,7 +391,9 @@ class DefaultGenome:
                 self.nodes[key] = ng1.copy()
             else:
                 # Homologous gene: combine genes from both parents.
-                self.nodes[key] = ng1.crossover(ng2)
+                # Node genes have no ``enabled`` attribute, so the disable rule
+                # has no effect; pass it through for consistency.
+                self.nodes[key] = ng1.crossover(ng2, disable_rule=config.disable_rule)
 
     def mutate(self, config):
         """ Mutates this genome. """
