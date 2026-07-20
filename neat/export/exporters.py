@@ -1,9 +1,3 @@
-"""
-Network-specific export functions for each NEAT network type.
-
-This module contains the implementation details for exporting each type of
-NEAT network (FeedForward, Recurrent, CTRNN, IZNN) to the JSON format.
-"""
 
 from datetime import datetime, timezone
 from .json_format import FORMAT_VERSION, get_function_info
@@ -34,8 +28,6 @@ def export_feedforward(network, metadata=None):
     nodes = []
     connections = []
     
-    # Extract node information from node_evals
-    # node_evals format: (node, act_func, agg_func, bias, response, links)
     for node_id, act_func, agg_func, bias, response, links in network.node_evals:
         node_data = {
             "id": node_id,
@@ -47,7 +39,6 @@ def export_feedforward(network, metadata=None):
         }
         nodes.append(node_data)
         
-        # Extract connections for this node
         for input_id, weight in links:
             connections.append({
                 "from": input_id,
@@ -56,7 +47,6 @@ def export_feedforward(network, metadata=None):
                 "enabled": True
             })
     
-    # Add input nodes (they don't appear in node_evals but are part of topology)
     for input_id in network.input_nodes:
         nodes.append({
             "id": input_id,
@@ -67,7 +57,6 @@ def export_feedforward(network, metadata=None):
             "response": 1.0
         })
     
-    # Build the complete data structure
     data = {
         "format_version": FORMAT_VERSION,
         "network_type": "feedforward",
@@ -85,7 +74,6 @@ def export_feedforward(network, metadata=None):
         "connections": connections
     }
 
-    # Add optional metadata if provided
     if metadata:
         data["metadata"].update(metadata)
 
@@ -106,8 +94,6 @@ def export_recurrent(network, metadata=None):
     nodes = []
     connections = []
     
-    # Extract node information from node_evals
-    # node_evals format: (node, act_func, agg_func, bias, response, links)
     for node_id, act_func, agg_func, bias, response, links in network.node_evals:
         node_data = {
             "id": node_id,
@@ -119,7 +105,6 @@ def export_recurrent(network, metadata=None):
         }
         nodes.append(node_data)
         
-        # Extract connections for this node
         for input_id, weight in links:
             connections.append({
                 "from": input_id,
@@ -128,7 +113,6 @@ def export_recurrent(network, metadata=None):
                 "enabled": True
             })
     
-    # Add input nodes
     for input_id in network.input_nodes:
         nodes.append({
             "id": input_id,
@@ -139,7 +123,6 @@ def export_recurrent(network, metadata=None):
             "response": 1.0
         })
     
-    # Build the complete data structure
     data = {
         "format_version": FORMAT_VERSION,
         "network_type": "recurrent",
@@ -157,7 +140,6 @@ def export_recurrent(network, metadata=None):
         "connections": connections
     }
 
-    # Add optional metadata if provided
     if metadata:
         data["metadata"].update(metadata)
 
@@ -178,8 +160,6 @@ def export_ctrnn(network, metadata=None):
     nodes = []
     connections = []
     
-    # Extract node information from node_evals dict
-    # node_evals format: {node_id: CTRNNNodeEval(time_constant, activation, aggregation, bias, response, links)}
     for node_id, node_eval in network.node_evals.items():
         node_data = {
             "id": node_id,
@@ -192,7 +172,6 @@ def export_ctrnn(network, metadata=None):
         }
         nodes.append(node_data)
         
-        # Extract connections for this node
         for input_id, weight in node_eval.links:
             connections.append({
                 "from": input_id,
@@ -201,7 +180,6 @@ def export_ctrnn(network, metadata=None):
                 "enabled": True
             })
     
-    # Add input nodes
     for input_id in network.input_nodes:
         nodes.append({
             "id": input_id,
@@ -213,7 +191,6 @@ def export_ctrnn(network, metadata=None):
             "time_constant": 1.0
         })
     
-    # Build the complete data structure
     data = {
         "format_version": FORMAT_VERSION,
         "network_type": "ctrnn",
@@ -231,7 +208,6 @@ def export_ctrnn(network, metadata=None):
         "connections": connections
     }
 
-    # Add optional metadata if provided
     if metadata:
         data["metadata"].update(metadata)
 
@@ -252,8 +228,6 @@ def export_iznn(network, metadata=None):
     nodes = []
     connections = []
     
-    # Extract node information from neurons dict
-    # neurons format: {node_id: IZNeuron(bias, a, b, c, d, inputs)}
     for node_id, neuron in network.neurons.items():
         node_data = {
             "id": node_id,
@@ -269,7 +243,6 @@ def export_iznn(network, metadata=None):
         }
         nodes.append(node_data)
         
-        # Extract connections for this neuron
         for input_id, weight in neuron.inputs:
             connections.append({
                 "from": input_id,
@@ -278,7 +251,6 @@ def export_iznn(network, metadata=None):
                 "enabled": True
             })
     
-    # Add input nodes
     for input_id in network.inputs:
         nodes.append({
             "id": input_id,
@@ -293,7 +265,6 @@ def export_iznn(network, metadata=None):
             "d": 0.0
         })
     
-    # Build the complete data structure
     data = {
         "format_version": FORMAT_VERSION,
         "network_type": "iznn",
@@ -311,7 +282,6 @@ def export_iznn(network, metadata=None):
         "connections": connections
     }
     
-    # Add optional metadata if provided
     if metadata:
         data["metadata"].update(metadata)
     

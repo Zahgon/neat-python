@@ -1,19 +1,10 @@
-"""
-JSON format schema definition and validation utilities for NEAT network export.
-
-This module defines the structure of the JSON format used to export NEAT networks.
-The format is designed to be framework-agnostic and human-readable, allowing
-third-party tools to convert networks to various formats (ONNX, TensorFlow, PyTorch, etc.).
-"""
 
 import inspect
 import neat.activations
 import neat.aggregations
 
-# Current format version
 FORMAT_VERSION = "1.0"
 
-# JSON Schema definition (for documentation and validation)
 SCHEMA = {
     "format_version": "string",
     "network_type": "feedforward | recurrent | ctrnn | iznn",
@@ -44,9 +35,7 @@ SCHEMA = {
             },
             "bias": "number",
             "response": "number",
-            # CTRNN-specific
             "time_constant": "number (CTRNN only)",
-            # IZNN-specific
             "a": "number (IZNN only)",
             "b": "number (IZNN only)",
             "c": "number (IZNN only)",
@@ -69,7 +58,6 @@ def is_builtin_activation(func):
     if func is None:
         return False
     
-    # Check if function is in neat.activations module
     module = inspect.getmodule(func)
     if module is None:
         return False
@@ -82,7 +70,6 @@ def is_builtin_aggregation(func):
     if func is None:
         return False
     
-    # Check if function is in neat.aggregations module
     module = inspect.getmodule(func)
     if module is None:
         return False
@@ -104,10 +91,8 @@ def get_function_info(func, function_type='activation'):
     if func is None:
         return {"name": "none", "custom": False}
     
-    # Get the function name
     name = func.__name__
     
-    # Remove common suffixes to get clean name
     if function_type == 'activation':
         name = name.replace('_activation', '')
         is_builtin = is_builtin_activation(func)
@@ -134,25 +119,21 @@ def validate_json(data):
     Returns:
         bool: True if valid
     """
-    # Check required top-level fields
     required_fields = ['format_version', 'network_type', 'metadata', 'topology', 'nodes', 'connections']
     for field in required_fields:
         if field not in data:
             raise ValueError(f"Missing required field: {field}")
     
-    # Validate network type
     valid_types = ['feedforward', 'recurrent', 'ctrnn', 'iznn']
     if data['network_type'] not in valid_types:
         raise ValueError(f"Invalid network_type: {data['network_type']}")
     
-    # Validate topology
     topology = data['topology']
     required_topology_fields = ['num_inputs', 'num_outputs', 'input_keys', 'output_keys']
     for field in required_topology_fields:
         if field not in topology:
             raise ValueError(f"Missing required topology field: {field}")
     
-    # Validate nodes
     if not isinstance(data['nodes'], list):
         raise ValueError("nodes must be a list")
     
@@ -164,7 +145,6 @@ def validate_json(data):
         if node['type'] not in ['input', 'hidden', 'output']:
             raise ValueError(f"Node {i} has invalid type: {node['type']}")
     
-    # Validate connections
     if not isinstance(data['connections'], list):
         raise ValueError("connections must be a list")
     

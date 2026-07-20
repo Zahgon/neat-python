@@ -1,4 +1,3 @@
-"""Directed graph algorithm implementations."""
 from collections import defaultdict, deque
 
 def creates_cycle(connections, test):
@@ -38,19 +37,14 @@ def required_for_output(inputs, outputs, connections):
     """
     assert not set(inputs).intersection(outputs)
 
-    # Traverse backwards from outputs to find all nodes that feed into outputs.
-    # This includes orphaned nodes (nodes with no incoming connections) that
-    # connect to outputs, as they are required to compute the output.
     required = set(outputs)
     s = set(outputs)
     while True:
-        # Find nodes not in s whose output is consumed by a node in s
         t = {a for (a, b) in connections if b in s and a not in s}
 
         if not t:
             break
 
-        # Only add non-input nodes to the required set
         layer_nodes = {x for x in t if x not in inputs}
         if not layer_nodes:
             break
@@ -74,31 +68,22 @@ def feed_forward_layers(inputs, outputs, connections):
 
     required = required_for_output(inputs, outputs, connections)
 
-    # Find required nodes that have no incoming connections.
-    # These are "bias neurons" that output activation(bias) independent of inputs.
     nodes_with_inputs = set()
     for a, b in connections:
         nodes_with_inputs.add(b)
 
-    # Bias neurons are required nodes with no incoming connections
     bias_neurons = required - nodes_with_inputs
 
     layers = []
-    # Start with inputs AND bias neurons in the ready set
     potential_input = set(inputs) | bias_neurons
 
-    # If there are bias neurons, add them as the first layer
     if bias_neurons:
         layers.append(bias_neurons.copy())
 
     while True:
-        # Find candidate nodes c for the next layer.  These nodes should connect
-        # a node in s to a node not in s.
         c = {b for (a, b) in connections if a in potential_input and b not in potential_input}
-        # Keep only the used nodes whose entire input set is contained in s.
         next_layer = set()
         for n in c:
-            # select connections (a, b) where b == n
             connections_to_n = [(a, b) for (a, b) in connections if b == n and a in required]
             if n in required and all(a in potential_input for (a, b) in connections_to_n):
                 next_layer.add(n)

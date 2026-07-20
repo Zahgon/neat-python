@@ -1,7 +1,3 @@
-"""
-Has the built-in aggregation functions, code for using them,
-and code for adding new user-defined ones.
-"""
 
 import types
 import warnings
@@ -12,36 +8,31 @@ from neat.math_util import mean, median2
 
 
 def product_aggregation(x):  # note: `x` is a list or other iterable
-    return reduce(mul, x, 1.0)
+    pass
 
 
 def sum_aggregation(x):
-    return sum(x)
+    pass
 
 
 def max_aggregation(x):
-    # Handle empty input (for orphaned nodes with no incoming connections)
-    return max(x) if x else 0.0
+    pass
 
 
 def min_aggregation(x):
-    # Handle empty input (for orphaned nodes with no incoming connections)
-    return min(x) if x else 0.0
+    pass
 
 
 def maxabs_aggregation(x):
-    # Handle empty input (for orphaned nodes with no incoming connections)
-    return max(x, key=abs) if x else 0.0
+    pass
 
 
 def median_aggregation(x):
-    # Handle empty input (for orphaned nodes with no incoming connections)
-    return median2(x) if x else 0.0
+    pass
 
 
 def mean_aggregation(x):
-    # Handle empty input (for orphaned nodes with no incoming connections)
-    return mean(x) if x else 0.0
+    pass
 
 
 class InvalidAggregationFunction(TypeError):
@@ -60,7 +51,6 @@ def validate_aggregation(function):  # TODO: Recognize when need `reduce`
 
 
 class AggregationFunctionSet:
-    """Contains aggregation functions and methods to add and retrieve them."""
 
     def __init__(self):
         self.functions = {}
@@ -77,11 +67,7 @@ class AggregationFunctionSet:
         self.functions[name] = function
 
     def get(self, name):
-        f = self.functions.get(name)
-        if f is None:
-            raise InvalidAggregationFunction(f"No such aggregation function: {name!r}")
-
-        return f
+        pass
 
     def __getitem__(self, index):
         warnings.warn(f"Use get, not indexing ([{index!r}]), for aggregation functions",
@@ -89,4 +75,4 @@ class AggregationFunctionSet:
         return self.get(index)
 
     def is_valid(self, name):
-        return name in self.functions
+        pass

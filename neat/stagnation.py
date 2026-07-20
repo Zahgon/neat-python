@@ -1,26 +1,18 @@
-"""Keeps track of whether species are making progress and helps remove those which are not."""
 import sys
 
 from neat.config import ConfigParameter, DefaultClassConfig
 from neat.math_util import stat_functions
 
 
-# TODO: Add a method for the user to change the "is stagnant" computation.
 
 
 class DefaultStagnation(DefaultClassConfig):
-    """Keeps track of whether species are making progress and helps remove ones that are not."""
 
     @classmethod
     def parse_config(cls, param_dict):
-        return DefaultClassConfig(param_dict,
-                                  [ConfigParameter('species_fitness_func', str, 'mean'),
-                                   ConfigParameter('max_stagnation', int, 15),
-                                   ConfigParameter('species_elitism', int, 0)],
-                                  'DefaultStagnation')
+        pass
 
     def __init__(self, config, reporters):
-        # pylint: disable=super-init-not-called
         self.stagnation_config = config
 
         self.species_fitness_func = stat_functions.get(config.species_fitness_func)
@@ -40,9 +32,6 @@ class DefaultStagnation(DefaultClassConfig):
         returns a list with stagnant species marked for removal.
         """
         species_data = []
-        # Iterate species in a deterministic order (by species id) so that
-        # stagnation decisions are reproducible across runs and checkpoint
-        # restores, independent of dictionary insertion order.
         for sid in sorted(species_set.species.keys()):
             s = species_set.species[sid]
             if s.fitness_history:
@@ -58,17 +47,12 @@ class DefaultStagnation(DefaultClassConfig):
 
             species_data.append((sid, s))
 
-        # Sort in ascending fitness order.
         species_data.sort(key=lambda x: x[1].fitness)
 
         result = []
         species_fitnesses = []
         num_non_stagnant = len(species_data)
         for idx, (sid, s) in enumerate(species_data):
-            # Override stagnant state if marking this species as stagnant would
-            # result in the total number of species dropping below the limit.
-            # Because species are in ascending fitness order, less fit species
-            # will be marked as stagnant first.
             stagnant_time = generation - s.last_improved
             is_stagnant = False
             if num_non_stagnant > self.stagnation_config.species_elitism:

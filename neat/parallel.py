@@ -1,7 +1,3 @@
-"""
-Runs evaluation functions in parallel subprocesses
-in order to evaluate multiple genomes at once.
-"""
 import random
 from multiprocessing import Pool
 
@@ -10,40 +6,12 @@ try:
     HAVE_TQDM = True
 except ImportError:
     HAVE_TQDM = False
-    # Fallback: tqdm is just an identity function when not available
     def tqdm(iterable, total=None):
-        return iterable
+        pass
 
 
 def _eval_wrapper(eval_function, seed, genome, config):
-    """
-    Wrapper that sets deterministic per-genome seed before evaluation.
-    
-    Each genome gets a unique but deterministic seed based on:
-    - Base seed provided to ParallelEvaluator
-    - Genome's unique key (ID)
-    
-    This ensures:
-    - Different genomes can use randomness in fitness evaluation
-    - Same genome always gets same random sequence (given same base seed)
-    - Results are reproducible across runs
-    
-    Note: Only controls Python's random module. If fitness function uses
-    NumPy, PyTorch, etc., those RNGs need separate seeding.
-    
-    Args:
-        eval_function: The user-provided fitness evaluation function
-        seed: Base seed for reproducibility (or None for non-deterministic)
-        genome: Genome object to evaluate
-        config: Configuration object
-    
-    Returns:
-        Fitness value for the genome
-    """
-    if seed is not None:
-        # Use genome key to ensure unique but deterministic seed per genome
-        random.seed(seed + genome.key)
-    return eval_function(genome, config)
+    pass
 
 class ParallelEvaluator:
     def __init__(self, num_workers, eval_function, timeout=None, initializer=None, initargs=(), maxtasksperchild=None, seed=None):
@@ -89,30 +57,11 @@ class ParallelEvaluator:
         return False
 
     def close(self):
-        """Properly close and cleanup the multiprocessing pool."""
-        if self.pool is not None and not self._closed:
-            self._closed = True
-            self.pool.close()  # Prevent any more tasks from being submitted
-            self.pool.join()   # Wait for worker processes to exit
-            self.pool = None
+        pass
 
     def __del__(self):
         """Cleanup on deletion - ensures resources are freed."""
         self.close()
 
     def evaluate(self, genomes, config):
-        jobs = []
-        for ignored_genome_id, genome in genomes:
-            if self.seed is not None:
-                # Use wrapper to set per-genome seed for reproducibility
-                jobs.append(self.pool.apply_async(
-                    _eval_wrapper,
-                    (self.eval_function, self.seed, genome, config)
-                ))
-            else:
-                # Original behavior - no seed
-                jobs.append(self.pool.apply_async(self.eval_function, (genome, config)))
-
-        # assign the fitness back to each genome
-        for job, (ignored_genome_id, genome) in tqdm(zip(jobs, genomes), total=len(jobs)):
-            genome.fitness = job.get(timeout=self.timeout)
+        pass

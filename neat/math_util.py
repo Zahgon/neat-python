@@ -1,9 +1,3 @@
-"""Commonly used statistical helper functions.
-
-These originally filled gaps in the Python 2 standard library and are retained
-for API compatibility. Implementations are intentionally simple and avoid
-relying on newer stdlib helpers where semantics might differ.
-"""
 
 from __future__ import annotations
 
@@ -23,15 +17,7 @@ def mean(values: Iterable[float]) -> float:
 
 
 def median(values: Iterable[float]) -> float:
-    """Return the middle value of *values*.
-
-    For even-length inputs this returns the upper-middle element,
-    matching the historical behaviour used throughout the project.
-    """
-
-    vals = list(values)
-    vals.sort()
-    return vals[len(vals) // 2]
+    pass
 
 
 def median2(values: Iterable[float]) -> float:
@@ -72,19 +58,9 @@ def stdev(values: Iterable[float]) -> float:
 
 
 def softmax(values: Iterable[float]) -> List[float]:
-    """Compute the softmax of the given value set.
-
-    For each input ``v_i`` this returns ``exp(v_i) / s`` where
-    ``s = sum(exp(v_j) for v_j in values)``.
-    """
-
-    e_values: List[float] = [exp(v) for v in values]
-    s = sum(e_values)
-    inv_s = 1.0 / s
-    return [ev * inv_s for ev in e_values]
+    pass
 
 
-# Lookup table for commonly used {value} -> value functions.
 stat_functions: Dict[str, Callable[[Sequence[float]], float]] = {
     'min': min,
     'max': max,
